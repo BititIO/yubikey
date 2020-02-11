@@ -6,7 +6,6 @@ module Yubikey
       :api_id,
       :url,
       :api_key,
-      :certificate_chain,
     ].freeze
 
     # By default, we want to point to Yubicloud
@@ -17,9 +16,6 @@ module Yubikey
 
     # By default, don't have an api_key
     DEFAULT_API_KEY           = nil
-
-    # Default location of the Yubico certificate chain
-    DEFAULT_CERTIFICATE_CHAIN = File.join(File.dirname(__FILE__), '../cert/chain.pem')
 
     # @private
     attr_accessor *VALID_OPTIONS_KEYS
@@ -46,7 +42,6 @@ module Yubikey
       self.api_id            = DEFAULT_API_ID
       self.url               = DEFAULT_API_URL
       self.api_key           = DEFAULT_API_KEY
-      self.certificate_chain = DEFAULT_CERTIFICATE_CHAIN
     end
   end
 end

@@ -4,7 +4,7 @@ require "net/http"
 require "uri"
 
 module Yubikey
-  
+
   class OTP::Verify
     # The raw status from the Yubico server
     attr_reader :status
@@ -12,47 +12,42 @@ module Yubikey
     def initialize(args)
       @api_key = args[:api_key] || Yubikey.api_key
       @api_id  = args[:api_id]  || Yubikey.api_id
-      
+
       raise(ArgumentError, "Must supply API ID") if @api_id.nil?
       raise(ArgumentError, "Must supply API Key") if @api_key.nil?
       raise(ArgumentError, "Must supply OTP") if args[:otp].nil?
 
       @url = args[:url] || Yubikey.url
       @nonce = args[:nonce] || OTP::Verify.generate_nonce(32)
-      
-      @certificate_chain = args[:certificate_chain] || Yubikey.certificate_chain
-      @cert_store = OpenSSL::X509::Store.new
-      @cert_store.add_file @certificate_chain
-      
+
       verify(args)
     end
-    
+
     def valid?
       @status == 'OK'
     end
-    
+
     def replayed?
       @status == 'REPLAYED_OTP'
     end
-    
+
     private
-    
+
     def verify(args)
       query = "id=#{@api_id}&otp=#{args[:otp]}&nonce=#{@nonce}"
 
       uri = URI.parse(@url) + 'verify'
       uri.query = query
-      
+
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
       http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-      http.cert_store = @cert_store
-      
+
       req = Net::HTTP::Get.new(uri.request_uri)
       result = http.request(req).body
 
       @status = result[/status=(.*)$/,1].strip
-      
+
       if @status == 'BAD_OTP' || @status == 'BACKEND_ERROR'
         raise OTP::InvalidOTPError, "Received error: #{@status}"
       end
